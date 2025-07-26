@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Час до приїзду кєцьки</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: linear-gradient(270deg, #1b2735, #090a0f, #2b1055, #1b2735);
+      background-size: 800% 800%;
+      animation: gradientShift 30s ease infinite;
+      font-family: monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .container {
+      text-align: center;
+      padding: 20px;
+      max-width: 100vw;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 16px;
+      text-shadow: 0 0 10px #fff, 0 0 30px #0ff;
+    }
+
+    #timer {
+      font-size: 56px;
+      font-weight: bold;
+      text-shadow: 0 0 10px #fff, 0 0 30px #0ff;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .flying {
+      position: absolute;
+      font-size: 32px;
+      animation: float 20s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes float {
+      0% { transform: translate(-50vw, -50vh) rotate(0deg); opacity: 0.2; }
+      50% { transform: translate(50vw, 50vh) rotate(360deg); opacity: 1; }
+      100% { transform: translate(-30vw, 80vh) rotate(720deg); opacity: 0.2; }
+    }
+
+    .beam {
+      position: absolute;
+      width: 2px;
+      height: 100vh;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.2), rgba(0,255,255,0.1), rgba(0,0,0,0));
+      animation: beamAnim 6s linear infinite;
+      opacity: 0.3;
+    }
+
+    @keyframes beamAnim {
+      0% { transform: translateY(-100%) scaleY(0.8); opacity: 0.2; }
+      50% { opacity: 1; }
+      100% { transform: translateY(100%) scaleY(1.2); opacity: 0.1; }
+    }
+
+    .obj {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.7;
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+
+    .blinker { animation: blink 1.5s infinite ease-in-out; }
+    @keyframes blink {
+      0%, 100% { opacity: 0.2; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.3); }
+    }
+
+    .glow { box-shadow: 0 0 20px #fff, 0 0 40px #0ff, 0 0 60px #0ff; }
+    .morph { animation: morphShape 4s infinite ease-in-out; }
+
+    @keyframes morphShape {
+      0% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+      50% { border-radius: 70% 30% 30% 70% / 70% 70% 30% 30%; }
+      100% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Час до приїзду кєцьки</h1>
+    <div id="timer">--</div>
+  </div>
+
+  <script>
+    const timerEl = document.getElementById("timer");
+
+    function updateTimer() {
+      const now = new Date();
+      const target = new Date(now.getFullYear(), 7, 2, 20, 0, 0); // 2 серпня 20:00
+      let diff = target - now;
+
+      if (diff <= 0) {
+        timerEl.textContent = "Кєцька приїхала ♥️";
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      diff %= (1000 * 60 * 60 * 24);
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      diff %= (1000 * 60 * 60);
+      const minutes = Math.floor(diff / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      timerEl.textContent = `${days} днів ${hours} годин ${minutes} хвилин ${seconds} секунд`;
+    }
+
+    setInterval(updateTimer, 1000);
+    updateTimer();
+
+    const emojis = ["🐱", "🐭", "🦬", "✝️", "🦙"];
+    for (let i = 0; i < 25; i++) {
+      const el = document.createElement("div");
+      el.className = "flying";
+      el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      el.style.left = Math.random() * 100 + "vw";
+      el.style.top = Math.random() * 100 + "vh";
+      el.style.animationDuration = (10 + Math.random() * 20) + "s";
+      el.style.animationDelay = (Math.random() * 10) + "s";
+      document.body.appendChild(el);
+    }
+
+    for (let i = 0; i < 20; i++) {
+      const beam = document.createElement("div");
+      beam.className = "beam";
+      beam.style.left = Math.random() * 100 + "vw";
+      beam.style.animationDelay = (Math.random() * 5) + "s";
+      document.body.appendChild(beam);
+    }
+
+    const numObjs = 40;
+    const objs = [];
+
+    function createObj() {
+      const el = document.createElement("div");
+      el.className = "obj";
+      const size = 1.5 + Math.random() * 2.5; // vw
+      el.style.width = el.style.height = size + "vw";
+      el.style.left = Math.random() * window.innerWidth + "px";
+      el.style.top = Math.random() * window.innerHeight + "px";
+      el.style.background = `hsl(${Math.floor(Math.random()*360)}, 80%, 60%)`;
+
+      if (Math.random() < 0.4) el.classList.add("blinker");
+      if (Math.random() < 0.4) el.classList.add("glow");
+      if (Math.random() < 0.3) el.classList.add("morph");
+
+      document.body.appendChild(el);
+
+      objs.push({
+        el,
+        x: parseFloat(el.style.left),
+        y: parseFloat(el.style.top),
+        vx: (Math.random() - 0.5) * 2,
+        vy: (Math.random() - 0.5) * 2,
+        hue: Math.random() * 360,
+      });
+    }
+
+    for (let i = 0; i < numObjs; i++) createObj();
+
+    function animate() {
+      objs.forEach(obj => {
+        obj.x += obj.vx;
+        obj.y += obj.vy;
+
+        if (obj.x < 0 || obj.x > window.innerWidth) obj.vx *= -1;
+        if (obj.y < 0 || obj.y > window.innerHeight) obj.vy *= -1;
+
+        obj.el.style.left = obj.x + "px";
+        obj.el.style.top = obj.y + "px";
+        obj.hue = (obj.hue + 0.5) % 360;
+        obj.el.style.background = `hsl(${obj.hue}, 80%, 60%)`;
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
