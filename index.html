@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Час до приїзду кєцьки</title>
   <style>
-    html, body {
+    html,
+    body {
       margin: 0;
       padding: 0;
       width: 100%;
@@ -18,27 +19,32 @@
       align-items: center;
       justify-content: center;
       color: white;
+      position: relative;
     }
-
     @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
     }
-
     .container {
       text-align: center;
       padding: 20px;
       max-width: 100vw;
       box-sizing: border-box;
+      z-index: 10;
+      position: relative;
     }
-
     h1 {
       font-size: 28px;
       margin-bottom: 16px;
       text-shadow: 0 0 10px #fff, 0 0 30px #0ff;
     }
-
     #timer {
       font-size: 56px;
       font-weight: bold;
@@ -46,35 +52,52 @@
       word-break: break-word;
       overflow-wrap: break-word;
     }
-
     .flying {
       position: absolute;
       font-size: 32px;
       animation: float 20s linear infinite;
       pointer-events: none;
     }
-
     @keyframes float {
-      0% { transform: translate(-50vw, -50vh) rotate(0deg); opacity: 0.2; }
-      50% { transform: translate(50vw, 50vh) rotate(360deg); opacity: 1; }
-      100% { transform: translate(-30vw, 80vh) rotate(720deg); opacity: 0.2; }
+      0% {
+        transform: translate(-50vw, -50vh) rotate(0deg);
+        opacity: 0.2;
+      }
+      50% {
+        transform: translate(50vw, 50vh) rotate(360deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(-30vw, 80vh) rotate(720deg);
+        opacity: 0.2;
+      }
     }
-
     .beam {
       position: absolute;
       width: 2px;
       height: 100vh;
-      background: linear-gradient(to bottom, rgba(255,255,255,0.2), rgba(0,255,255,0.1), rgba(0,0,0,0));
+      background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.2),
+        rgba(0, 255, 255, 0.1),
+        rgba(0, 0, 0, 0)
+      );
       animation: beamAnim 6s linear infinite;
       opacity: 0.3;
     }
-
     @keyframes beamAnim {
-      0% { transform: translateY(-100%) scaleY(0.8); opacity: 0.2; }
-      50% { opacity: 1; }
-      100% { transform: translateY(100%) scaleY(1.2); opacity: 0.1; }
+      0% {
+        transform: translateY(-100%) scaleY(0.8);
+        opacity: 0.2;
+      }
+      50% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100%) scaleY(1.2);
+        opacity: 0.1;
+      }
     }
-
     .obj {
       position: absolute;
       border-radius: 50%;
@@ -82,57 +105,214 @@
       pointer-events: none;
       mix-blend-mode: screen;
     }
-
-    .blinker { animation: blink 1.5s infinite ease-in-out; }
+    .blinker {
+      animation: blink 1.5s infinite ease-in-out;
+    }
     @keyframes blink {
-      0%, 100% { opacity: 0.2; transform: scale(1); }
-      50% { opacity: 1; transform: scale(1.3); }
+      0%,
+      100% {
+        opacity: 0.2;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1.3);
+      }
+    }
+    .glow {
+      box-shadow: 0 0 20px #fff, 0 0 40px #0ff, 0 0 60px #0ff;
+    }
+    .morph {
+      animation: morphShape 4s infinite ease-in-out;
+    }
+    @keyframes morphShape {
+      0% {
+        border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+      }
+      50% {
+        border-radius: 70% 30% 30% 70% / 70% 70% 30% 30%;
+      }
+      100% {
+        border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+      }
     }
 
-    .glow { box-shadow: 0 0 20px #fff, 0 0 40px #0ff, 0 0 60px #0ff; }
-    .morph { animation: morphShape 4s infinite ease-in-out; }
-
-    @keyframes morphShape {
-      0% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
-      50% { border-radius: 70% 30% 30% 70% / 70% 70% 30% 30%; }
-      100% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+    /* Canvas Fullscreen */
+    #fireworksCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+      display: none; /* hidden initially */
     }
   </style>
 </head>
 <body>
-
   <div class="container">
     <h1 id="heading">Час до приїзду запізнілої Кєцьки</h1>
     <div id="timer">--</div>
   </div>
 
+  <canvas id="fireworksCanvas"></canvas>
+
   <script>
     const timerEl = document.getElementById("timer");
     const heading = document.getElementById("heading");
+    const canvas = document.getElementById("fireworksCanvas");
+    const ctx = canvas.getContext("2d");
+    let fireworksShown = false;
 
-    function updateTimer() {
-      const now = new Date();
-      const target = new Date(now.getFullYear(), 7, 3, 18, 0, 0); // 3 серпня 18:00
-      let diff = target - now;
+    // Resize canvas
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
 
-      if (diff <= 0) {
-        timerEl.textContent = "Кєцька приїхала ♥️";
-        return;
+    // Firework and particle classes for realistic effect
+    class Particle {
+      constructor(x, y, color, angle, speed, gravity) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.angle = angle;
+        this.speed = speed;
+        this.gravity = gravity;
+        this.alpha = 1;
+        this.decay = 0.015 + Math.random() * 0.015;
+        this.radius = 2 + Math.random() * 2;
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
       }
-
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      diff %= (1000 * 60 * 60 * 24);
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      diff %= (1000 * 60 * 60);
-      const minutes = Math.floor(diff / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-      timerEl.textContent = `${days} днів ${hours} годин ${minutes} хвилин ${seconds} секунд`;
+      update() {
+        this.vx *= 0.98; // some friction
+        this.vy += this.gravity;
+        this.x += this.vx;
+        this.y += this.vy;
+        this.alpha -= this.decay;
+      }
+      draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = this.alpha > 0 ? this.alpha : 0;
+        ctx.beginPath();
+        ctx.fillStyle = this.color;
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = 10;
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
     }
 
-    setInterval(updateTimer, 1000);
-    updateTimer();
+    class Firework {
+      constructor(startX, startY, targetX, targetY) {
+        this.x = startX;
+        this.y = startY;
+        this.targetX = targetX;
+        this.targetY = targetY;
+        this.speed = 7 + Math.random() * 3;
+        this.angle = Math.atan2(targetY - startY, targetX - startX);
+        this.distanceToTarget = distance(startX, startY, targetX, targetY);
+        this.distanceTraveled = 0;
+        this.particles = [];
+        this.exploded = false;
+        this.color = `hsl(${Math.floor(Math.random() * 360)}, 100%, 70%)`;
+      }
+      update() {
+        if (!this.exploded) {
+          let vx = Math.cos(this.angle) * this.speed;
+          let vy = Math.sin(this.angle) * this.speed;
+          this.x += vx;
+          this.y += vy;
+          this.distanceTraveled += this.speed;
+          if (this.distanceTraveled >= this.distanceToTarget) {
+            this.exploded = true;
+            this.createParticles();
+          }
+        }
+        this.particles.forEach((p, i) => {
+          p.update();
+          if (p.alpha <= 0) this.particles.splice(i, 1);
+        });
+      }
+      createParticles() {
+        const count = 50 + Math.floor(Math.random() * 50);
+        for (let i = 0; i < count; i++) {
+          const angle = (Math.PI * 2 * i) / count;
+          const speed = 2 + Math.random() * 3;
+          this.particles.push(
+            new Particle(this.x, this.y, this.color, angle, speed, 0.03)
+          );
+        }
+      }
+      draw(ctx) {
+        if (!this.exploded) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.fillStyle = this.color;
+          ctx.shadowColor = this.color;
+          ctx.shadowBlur = 10;
+          ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+        this.particles.forEach((p) => p.draw(ctx));
+      }
+      isDone() {
+        return this.exploded && this.particles.length === 0;
+      }
+    }
 
+    // Utility: distance between points
+    function distance(x1, y1, x2, y2) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    // Fireworks controller
+    let fireworks = [];
+    let lastFireworkTime = 0;
+    const fireworkDelay = 50; // ms between launches
+
+    function launchFirework() {
+      const startX = window.innerWidth / 2 + (Math.random() - 0.5) * 200;
+      const startY = window.innerHeight;
+      const targetX = Math.random() * window.innerWidth;
+      const targetY = Math.random() * (window.innerHeight / 2);
+      fireworks.push(new Firework(startX, startY, targetX, targetY));
+    }
+
+    // Animate loop
+    function animateFireworks(timestamp) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (timestamp - lastFireworkTime > fireworkDelay) {
+        launchFirework();
+        lastFireworkTime = timestamp;
+      }
+      fireworks.forEach((fw, i) => {
+        fw.update();
+        fw.draw(ctx);
+        if (fw.isDone()) fireworks.splice(i, 1);
+      });
+      if (fireworksShown) {
+        requestAnimationFrame(animateFireworks);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    function showFireworks() {
+      fireworksShown = true;
+      canvas.style.display = "block";
+      animateFireworks(0);
+    }
+
+    // Original flying emojis and beams for decoration
     const emojis = ["🐱", "🐭", "🦬", "✈️", "🦙", "🚌"];
     for (let i = 0; i < 25; i++) {
       const el = document.createElement("div");
@@ -140,8 +320,8 @@
       el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
       el.style.left = Math.random() * 100 + "vw";
       el.style.top = Math.random() * 100 + "vh";
-      el.style.animationDuration = (10 + Math.random() * 20) + "s";
-      el.style.animationDelay = (Math.random() * 10) + "s";
+      el.style.animationDuration = 10 + Math.random() * 20 + "s";
+      el.style.animationDelay = Math.random() * 10 + "s";
       document.body.appendChild(el);
     }
 
@@ -149,13 +329,12 @@
       const beam = document.createElement("div");
       beam.className = "beam";
       beam.style.left = Math.random() * 100 + "vw";
-      beam.style.animationDelay = (Math.random() * 5) + "s";
+      beam.style.animationDelay = Math.random() * 5 + "s";
       document.body.appendChild(beam);
     }
 
     const numObjs = 40;
     const objs = [];
-
     function createObj() {
       const el = document.createElement("div");
       el.className = "obj";
@@ -163,14 +342,11 @@
       el.style.width = el.style.height = size + "vw";
       el.style.left = Math.random() * window.innerWidth + "px";
       el.style.top = Math.random() * window.innerHeight + "px";
-      el.style.background = `hsl(${Math.floor(Math.random()*360)}, 80%, 60%)`;
-
+      el.style.background = `hsl(${Math.floor(Math.random() * 360)}, 80%, 60%)`;
       if (Math.random() < 0.4) el.classList.add("blinker");
       if (Math.random() < 0.4) el.classList.add("glow");
       if (Math.random() < 0.3) el.classList.add("morph");
-
       document.body.appendChild(el);
-
       objs.push({
         el,
         x: parseFloat(el.style.left),
@@ -180,27 +356,47 @@
         hue: Math.random() * 360,
       });
     }
-
     for (let i = 0; i < numObjs; i++) createObj();
-
     function animate() {
-      objs.forEach(obj => {
+      objs.forEach((obj) => {
         obj.x += obj.vx;
         obj.y += obj.vy;
-
         if (obj.x < 0 || obj.x > window.innerWidth) obj.vx *= -1;
         if (obj.y < 0 || obj.y > window.innerHeight) obj.vy *= -1;
-
         obj.el.style.left = obj.x + "px";
         obj.el.style.top = obj.y + "px";
         obj.hue = (obj.hue + 0.5) % 360;
         obj.el.style.background = `hsl(${obj.hue}, 80%, 60%)`;
       });
-
       requestAnimationFrame(animate);
     }
-
     animate();
+
+    // Timer logic with updated date to 2 August
+    function updateTimer() {
+      const now = new Date();
+      const target = new Date(now.getFullYear(), 7, 3, 18, 0, 0); // 2 серпня 18:00
+      let diff = target - now;
+
+      if (diff <= 0) {
+        timerEl.textContent = "Кєцька приїхала ♥️";
+        if (!fireworksShown) {
+          showFireworks();
+        }
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      diff %= 1000 * 60 * 60 * 24;
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      diff %= 1000 * 60 * 60;
+      const minutes = Math.floor(diff / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      timerEl.textContent = `${days} днів ${hours} годин ${minutes} хвилин ${seconds} секунд`;
+    }
+    setInterval(updateTimer, 1000);
+    updateTimer();
   </script>
 </body>
 </html>
