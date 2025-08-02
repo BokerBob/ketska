@@ -102,16 +102,17 @@
 <body>
 
   <div class="container">
-    <h1>Час до приїзду кєцьки</h1>
+    <h1 id="heading">Час до приїзду запізнілої Кєцьки</h1>
     <div id="timer">--</div>
   </div>
 
   <script>
     const timerEl = document.getElementById("timer");
+    const heading = document.getElementById("heading");
 
     function updateTimer() {
       const now = new Date();
-      const target = new Date(now.getFullYear(), 7, 2, 20, 0, 0); // 2 серпня 20:00
+      const target = new Date(now.getFullYear(), 7, 3, 18, 0, 0); // 3 серпня 18:00
       let diff = target - now;
 
       if (diff <= 0) {
